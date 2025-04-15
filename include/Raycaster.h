@@ -13,7 +13,7 @@
 #define M_PI 3.14159265358979323846
 #define PROJECTION_PLANE_WIDTH 800
 #define PROJECTION_PLANE_HEIGHT 640
-#define RAYS 80
+#define RAYS 75
 #define LINE_HEIGHT 320
 enum VIEW_MODE{
 	MAP2D, //For visually debugging the map on a grid
