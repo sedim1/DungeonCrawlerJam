@@ -11,16 +11,14 @@ bool init();
 void end();
 void Update();
 void Draw();
+void draw2DProjection();
+void draw3DProjection();
 
 void frameBufferSizeCallback(GLFWwindow* window,int w,int h);
 void ProcessInput();
 
 //Player functions
 void PlayerInput();
-
-//Screen Size
-int SCREEN_WIDTH = 800;
-int SCREEN_HEIGHT = 640;
 
 
 //Window
@@ -30,6 +28,13 @@ GLFWwindow* window;
 Map2D map;
 //Entities in the map
 Entity player;
+
+//Screen Size
+int SCREEN_WIDTH = 800;
+int SCREEN_HEIGHT = 640;
+const float FOV = RAYS;
+float distToProjPlane;
+float angleStep;
 
 int main(int argc,char* argv[]){
     if(!init())
@@ -84,7 +89,10 @@ bool init(){
     player.position.y = 128 - 32;
 	    player.angle = 0.02f;
 
-    return true;
+	distToProjPlane = ((SCREEN_WIDTH / 2.0f)) / tan((degToRad(FOV)/2.0f));
+	angleStep = FOV / SCREEN_WIDTH;
+
+	return true;
 }
 
 void end(){
@@ -103,11 +111,46 @@ void Update(){
 void Draw(){
     glClearColor(0.2f,0.3f,0.3f,1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    if( map.projection == MAP2D)
+	    draw2DProjection();
+    if( map.projection == PROJECTION3D)
+	    draw3DProjection();
+    glfwPollEvents();
+    glfwSwapBuffers(window);
+}
+
+void draw2DProjection(){
     drawMap2D(&map);
     drawRays3D(&map,&player);
     drawEntityOnMap(&player);
-    glfwPollEvents();
-    glfwSwapBuffers(window);
+}
+
+void draw3DProjection(){
+	int rays = 0;
+        float distH,distV,dist;
+        Entity r = player;//The ray represented as an entity;
+        r.angle = player.angle+(RAYS/2); r.angle = angleAdjust(r.angle);
+        //Get the position in cell cord where the ray starts to get caste
+        for(rays = 0; rays < RAYS;rays++){
+                VECTOR2D rayH = castRayH(&map,&r);
+                VECTOR2D rayV = castRayV(&map,&r);
+                VECTOR2D ray;
+                distH = length(&player.position,&rayH);                                                                                                                     
+                distV = length(&player.position,&rayV);                                                                                                                     
+                ray = (distH < distV) ? rayH : rayV;                                                                                                                         
+                dist = (distH < distV) ? distH : distV; //Save distance of the selected wall
+                float shadow = (distH < distV) ? 1.0f : 0.5f; //Save distance of the selected wall
+		float ca = player.angle - r.angle; ca = angleAdjust(ca);
+		dist = dist * cos(degToRad(ca));
+		float vOffset = SCREEN_HEIGHT/2;
+		//Draw 3D WALSS
+		float projectedSliceHeight = (map.mapSize / dist) * distToProjPlane;
+		glColor3f(shadow,0.0f,0.0f);glLineWidth(8);
+		glBegin(GL_LINES);
+		glVertex2i(rays*8 + 80, (int)(vOffset - projectedSliceHeight/2) - 0.0001f);glVertex2i(rays*8 + 80,(int)(vOffset + projectedSliceHeight/2 - 0.0001f));
+		glEnd();
+                r.angle -= 1.0f; r.angle = angleAdjust(r.angle);                                                                                                             
+        }
 }
 
 void frameBufferSizeCallback(GLFWwindow* window,int w,int h){
@@ -128,6 +171,10 @@ void frameBufferSizeCallback(GLFWwindow* window,int w,int h){
 void ProcessInput(){
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+    if(glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
+	    map.projection = MAP2D;
+    if(glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
+	    map.projection = PROJECTION3D;
 
     PlayerInput();
 }

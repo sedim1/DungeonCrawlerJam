@@ -41,7 +41,7 @@ Map2D loadMap(char* path,enum VIEW_MODE mode){
             fscanf(fp,"%d",&map.buffer[i]);
             i++;
         }
-        printf("MAP LOADED %s \n",path);
+        printf("\nMAP LOADED %s \n",path);
         printf("[ WIDTH HEIGHT SIZE ]\n%d %d %d\n",map.mapWidth,map.mapHeight,map.mapSize);
         for(int i = 0; i < map.mapHeight; i++){
         	for(int j = 0; j < map.mapWidth; j++){
@@ -175,7 +175,6 @@ void drawRays3D(Map2D* map,Entity* entity){
 	float distH,distV,dist;
 	Entity r = *entity;//The ray represented as an entity;
 	r.angle = entity->angle-(RAYS/2); r.angle = angleAdjust(r.angle);
-	float startTime = (float)glfwGetTime();
 	//Get the position in cell cord where the ray starts to get caste
 	for(rays = 0; rays < RAYS;rays++){
 		VECTOR2D rayH = castRayH(map,&r);
@@ -191,6 +190,4 @@ void drawRays3D(Map2D* map,Entity* entity){
 		glEnd();
 		r.angle += 1.0f; r.angle = angleAdjust(r.angle);
 	}
-	float endTime = (float)glfwGetTime();
-	float elapsedTime = endTime - startTime;
 }
