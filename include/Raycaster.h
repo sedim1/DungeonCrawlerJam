@@ -12,9 +12,11 @@
 #define MAX 100
 #define M_PI 3.14159265358979323846
 #define PROJECTION_PLANE_WIDTH 800
-#define PROJECTION_PLANE_HEIGHT 640
-#define RAYS 75
+#define PROJECTION_HEIGHT 450
+#define RAYS 80
 #define LINE_HEIGHT 320
+#define FOV 80
+#define PIXEL_SIZE 8
 enum VIEW_MODE{
 	MAP2D, //For visually debugging the map on a grid
 	PROJECTION3D,

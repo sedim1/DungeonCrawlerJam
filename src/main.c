@@ -32,7 +32,6 @@ Entity player;
 //Screen Size
 int SCREEN_WIDTH = 800;
 int SCREEN_HEIGHT = 640;
-const float FOV = RAYS;
 float distToProjPlane;
 float angleStep;
 
@@ -131,7 +130,7 @@ void draw3DProjection(){
         Entity r = player;//The ray represented as an entity;
         r.angle = player.angle+(RAYS/2); r.angle = angleAdjust(r.angle);
         //Get the position in cell cord where the ray starts to get caste
-        for(rays = 0; rays < RAYS;rays++){
+        for(rays = 0; rays < RAYS ; rays++){
                 VECTOR2D rayH = castRayH(&map,&r);
                 VECTOR2D rayV = castRayV(&map,&r);
                 VECTOR2D ray;
@@ -142,14 +141,21 @@ void draw3DProjection(){
                 float shadow = (distH < distV) ? 1.0f : 0.5f; //Save distance of the selected wall
 		float ca = player.angle - r.angle; ca = angleAdjust(ca);
 		dist = dist * cos(degToRad(ca));
-		float vOffset = SCREEN_HEIGHT/2;
 		//Draw 3D WALSS
+		float vOffset = PROJECTION_HEIGHT/2;
 		float projectedSliceHeight = (map.mapSize / dist) * distToProjPlane;
-		glColor3f(shadow,0.0f,0.0f);glLineWidth(8);
-		glBegin(GL_LINES);
-		glVertex2i(rays*8 + 80, (int)(vOffset - projectedSliceHeight/2) - 0.0001f);glVertex2i(rays*8 + 80,(int)(vOffset + projectedSliceHeight/2 - 0.0001f));
-		glEnd();
-                r.angle -= 1.0f; r.angle = angleAdjust(r.angle);                                                                                                             
+		float topPoint = (int)(vOffset - projectedSliceHeight/2);
+		float bottomPoint = (int)(vOffset + projectedSliceHeight/2);
+		if(bottomPoint>PROJECTION_HEIGHT)
+			bottomPoint = PROJECTION_HEIGHT;
+		glColor3f(shadow,0.0f,0.0f);glPointSize(PIXEL_SIZE);
+		//Draw points of the wall
+		for(int y = topPoint; y <= bottomPoint; y++){
+			glBegin(GL_POINTS);
+			glVertex2i(80 + rays * PIXEL_SIZE,y);
+			glEnd();
+		}
+                r.angle -= 1.0f; r.angle = angleAdjust(r.angle);
         }
 }
 
