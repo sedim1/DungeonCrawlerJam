@@ -80,9 +80,9 @@ bool init(){
     map = loadMap("Map/testMap.txt",MAP2D);
 
     //Set Up entities in the world
-    player.xPos = 128 - ((map.mapSize/2));
-    player.yPos = 128 - ((map.mapSize/2));
-    player.angle = 90.0f;
+    player.position.x = 128 - 32;
+    player.position.y = 128 - 32;
+	    player.angle = 0.02f;
 
     return true;
 }
@@ -104,6 +104,7 @@ void Draw(){
     glClearColor(0.2f,0.3f,0.3f,1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     drawMap2D(&map);
+    drawRays3D(&map,&player);
     drawEntityOnMap(&player);
     glfwPollEvents();
     glfwSwapBuffers(window);
@@ -132,19 +133,22 @@ void ProcessInput(){
 }
 
 void PlayerInput(){
-    float dx = cos(degToRad(&player.angle));
-    float dy = -sin(degToRad(&player.angle));
+    float dx = cos(degToRad(player.angle));
+    float dy = -sin(degToRad(player.angle));
     if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS){
-        player.xPos += dx * 4;
-        player.yPos += dy * 4;
+        player.position.x += dx * 4;
+        player.position.y += dy * 4;
     }
     if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS){
-        player.xPos -= dx * 4;
-        player.yPos -= dy * 4;
+        player.position.x -= dx * 4;
+        player.position.y -= dy * 4;
     }
-    if(glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-        player.angle +=2.0f;
-    if(glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-        player.angle -= 2.0f;
+    if(glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS){
+        player.angle +=1.0f;
+    	player.angle = angleAdjust(player.angle);
+    }
+    if(glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS){
+        player.angle -= 1.0f;
+    	player.angle = angleAdjust(player.angle);
+    }
 }
-
