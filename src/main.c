@@ -35,6 +35,12 @@ int SCREEN_WIDTH = 800;
 int SCREEN_HEIGHT = 640;
 float distToProjPlane;
 
+//For deltaTime
+float deltaTime;
+float currentTime = 0.0f;
+float lastTime = 0.0f;
+
+
 int main(int argc,char* argv[]){
     if(!init())
         return -1;
@@ -75,7 +81,7 @@ bool init(){
     glLoadIdentity();
     
 
-    //glEnable(GL_DEPTH_TEST);
+    glEnable(GL_DEPTH_TEST);
 
     //Set Callbacks
     glfwSetFramebufferSizeCallback(window, frameBufferSizeCallback); 
@@ -99,6 +105,10 @@ void end(){
 
 void Update(){
     while(!glfwWindowShouldClose(window)){
+	//calculate deltatime
+	currentTime =  (float)glfwGetTime();
+	deltaTime = currentTime - lastTime;
+	lastTime = currentTime;
         ProcessInput();
         //Draw on Screen
         Draw();
@@ -197,11 +207,11 @@ void PlayerInput(){
         player.position.y -= dy * 4;
     }
     if(glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS){
-        player.angle +=1.0f;
+        player.angle +=100.0f * deltaTime;
     	player.angle = angleAdjust(player.angle);
     }
     if(glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS){
-        player.angle -= 1.0f;
+        player.angle -= 100.0f * deltaTime;
     	player.angle = angleAdjust(player.angle);
     }
 }

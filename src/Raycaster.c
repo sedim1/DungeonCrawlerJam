@@ -106,8 +106,11 @@ VECTOR2D castRayH(Map2D* map, Entity* entity){
 	float rayAngle = entity->angle;
 	float rx,ry, xo, yo;
 	int r = 0;int dof = 0; int mPos , mx, my;
-	float aTan = -1.0f/tan(degToRad(rayAngle));
 	CellCord playerPos = cartesianToCellCords(entity->position.x,entity->position.y,map->mapSize);
+        if(fabs(fmod(rayAngle,180.0f)) == 0.0f){//looking left or right
+                rayAngle+=0.0001f;
+        }
+	float aTan = -1.0f/tan(degToRad(rayAngle));
         if(rayAngle > 180.0f)//Looking Down
         {
                 ry = playerPos.y * map->mapSize + map->mapSize;
@@ -120,9 +123,6 @@ VECTOR2D castRayH(Map2D* map, Entity* entity){
                 rx = -(entity->position.y-ry) * aTan + entity->position.x;
         	yo = -map->mapSize;
                 xo = yo * aTan;
-        }
-        if(rayAngle == 0 || rayAngle == 180.0f){//looking left or right
-                rayAngle+=0.0001f;
         }
 	while(dof<8){//Check if it hits a wall on the map layout
                         mx = (int)(rx / map->mapSize); my = (int)(ry / map->mapSize);
@@ -143,8 +143,11 @@ VECTOR2D castRayV(Map2D* map, Entity* entity){
 	float rayAngle = entity->angle;
 	float rx,ry, xo, yo;
 	int r = 0;int dof = 0; int mPos , mx, my;
-	float nTan = -tan(degToRad(rayAngle));
 	CellCord playerPos = cartesianToCellCords(entity->position.x,entity->position.y,map->mapSize);
+                if(fabs(fmod(rayAngle,90.0f))==0.0f){//looking up or down
+                        rayAngle+=0.0001f;
+                }
+		float nTan = -tan(degToRad(rayAngle));
                 if(rayAngle > 90.0f && rayAngle < 270.0f)//Looking left
                 {
                         rx = playerPos.x * map->mapSize - 0.0001f;
@@ -157,9 +160,6 @@ VECTOR2D castRayV(Map2D* map, Entity* entity){
                         ry = -(entity->position.x-rx) * nTan + entity->position.y;
                         xo = map->mapSize;
                         yo = (xo * nTan);
-                }
-                else if(rayAngle == 90.0f || rayAngle == 270.0f){//looking up or down
-                        rayAngle+=0.0001f;
                 }
 		while(dof<8){//Check if it hits a wall on the map layout
                         mx = (int)(rx / map->mapSize); my = (int)(ry / map->mapSize);

@@ -13,9 +13,9 @@
 #define M_PI 3.14159265358979323846
 #define PROJECTION_WIDTH 800
 #define PROJECTION_HEIGHT 450
-#define RAYS 70
+#define RAYS 100
 #define LINE_HEIGHT 320
-#define FOV 60
+#define FOV 75
 #define PIXEL_SIZE 8
 #define CELLSIZE 64
 
