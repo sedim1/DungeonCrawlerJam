@@ -6,7 +6,7 @@
 #include <GLFW/glfw3.h>
 #include "Raycaster.h"
 #define SPEED 50.0
-#define RSPEED 350.0
+#define RSPEED 380.0
 
 bool init();
 void end();
@@ -143,9 +143,8 @@ void Draw(){
 }
 
 void draw2DProjection(){
-    drawMap2D(&map);
-    drawRays3D(&map,&player);
     drawEntityOnMap(&player);
+    drawMap2D(&map);
 }
 
 void draw3DProjection(){
