@@ -5,7 +5,8 @@
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
 #include "Raycaster.h"
-
+#define SPEED 50.0
+#define RSPEED 350.0
 
 bool init();
 void end();
@@ -26,7 +27,7 @@ void rotateRight();
 bool dirPressed();
 bool movePressed();
 void movePlayer();
-
+bool wallCollision();
 
 //Window
 GLFWwindow* window;
@@ -240,22 +241,22 @@ void rotateLeft(){
 	bool finished = false;
 	switch(playerDir){
 		case 0://UP
-			player.angle += 200.0f * deltaTime;
+			player.angle += RSPEED * deltaTime;
 			if(player.angle >= 90.0f){
 				finished = true; player.angle = 90.0f;}
 			break;
 		case 1://DOWN
-			player.angle += 200.0f * deltaTime;
+			player.angle += RSPEED * deltaTime;
 			if(player.angle >= 270.0f){
 				finished = true;player.angle = 270.0f;}
 			break;
 		case 2://LEFT
-			player.angle += 200.0f * deltaTime;
+			player.angle += RSPEED * deltaTime;
 			if(player.angle >= 180.0f){
 				finished = true; player.angle = 180.0f;}
 			break;
 		case 3://RIGHT
-			player.angle += 200.0f * deltaTime;
+			player.angle += RSPEED * deltaTime;
 			if(player.angle >= 360.0f){
 				finished = true; player.angle = 360.0f;
 				player.angle = angleAdjust(player.angle);
@@ -271,23 +272,23 @@ void rotateRight(){
 	 bool finished = false;
         switch(playerDir){ 
                 case 0://UP
-                        player.angle -= 200.0f * deltaTime;                               
+                        player.angle -= RSPEED * deltaTime;                               
                         if(player.angle <= 90.0f){
                                 finished = true; player.angle = 90.0f;}
                         break;
                 case 1://DOWN
-                        player.angle -= 200.0f * deltaTime;                               
+                        player.angle -= RSPEED * deltaTime;                               
         		player.angle = angleAdjust(player.angle);
                         if(player.angle <= 270.0f){
                                 finished = true;player.angle = 270.0f;}
                         break;
                 case 2://LEFT
-                        player.angle -= 200.0f * deltaTime;                                
+                        player.angle -= RSPEED * deltaTime;                                
                         if(player.angle <= 180.0f){
                                 finished = true; player.angle = 180.0f;}
                         break;
                 case 3://RIGHT
-                        player.angle -= 200.0f * deltaTime;                               
+                        player.angle -= RSPEED * deltaTime;                               
                         if(player.angle <= 0.0f){
                                 finished = true; player.angle = 0.0f;
 				player.angle = angleAdjust(player.angle);
@@ -301,16 +302,52 @@ void rotateRight(){
 
 void movePlayer(){
 	player.position = lerp(&player.currentPos,&player.nextPos,tPos);
-	tPos += 0.1f * 100.0f * deltaTime;
+	tPos += 0.1f * SPEED * deltaTime;
 	if(tPos>=1.0f){
 		player.position = player.nextPos;
 		player.state = IDLE;
 	}
 }
+bool wallPlayerCollision(){
+	CellCord gridPos = cartesianToCellCords(player.position.x,player.position.y,CELLSIZE);// get the position on x and y according to the position of player
+	switch(playerDir){
+		case 0://UP
+		       if(keyPressed == UP)
+				gridPos.y -=1;
+		       else
+			       gridPos.y += 1;
+			break;
+		case 1://DOWN
+		       if(keyPressed == UP)
+				gridPos.y +=1;
+		       else
+			       gridPos.y -= 1;
+			break;
+		      
+		case 2://LEFT
+		       if(keyPressed == UP)
+				gridPos.x -=1;
+		       else
+			       gridPos.x += 1;
+			break;
+		case 3://RIGHT
+		       if(keyPressed == UP)
+				gridPos.x +=1;
+		       else
+			       gridPos.x -= 1;
+			break;
+	}
+	int mPos = gridPos.y * map.mapWidth + gridPos.x;// convert int into position on array
+	if(mPos >= 0 && mPos < map.mapWidth*map.mapHeight && map.buffer[mPos] == 1)
+		return true;
+	return false;
+}
 
 void PlayerInput(){
     if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && canMove){
 	    keyPressed = UP;
+	    if(wallPlayerCollision())
+		    return;
 	    player.state = MOVING;
 	    canMove = false;
 	    tPos = 0.0f;
@@ -332,6 +369,8 @@ void PlayerInput(){
     }
     if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS && canMove){
 	    keyPressed = DOWN;
+	    if(wallPlayerCollision())
+		    return;
 	player.state = MOVING;
 	canMove = false;
 	tPos = 0.0f;

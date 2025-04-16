@@ -44,9 +44,6 @@ float moveToward(float from,float to,float delta){
 
 VECTOR2D lerp(VECTOR2D* A, VECTOR2D* B,float t){
 	VECTOR2D res;
-	//(ax,ay) + ( (bx,by) - (ax,ay) ) * t
-	//(ax,ay) + ( (bx-ax,by-ay) ) * t
-	//(ax,ay) +  ( t * (bx-ax), t * (by-ay) )
 	res.x = A->x + (t * (B->x - A->x));
 	res.y = A->y + (t * (B->y - A->y));
 	return res;
@@ -54,8 +51,8 @@ VECTOR2D lerp(VECTOR2D* A, VECTOR2D* B,float t){
 
 //Map2D functions
 Map2D loadMap(char* path,enum VIEW_MODE mode){
-    Map2D map;
-    map.mapWidth = 0; map.mapHeight = 0; map.mapSize = 0; map.projection = mode;
+    Map2D map = {0,0,0,{0},MAP2D};
+    //map.mapWidth = 0; map.mapHeight = 0; map.mapSize = 0; map.projection = mode;
     int i = 0;
     FILE* fp = fopen(path,"r");
     if(fp){
@@ -69,7 +66,7 @@ Map2D loadMap(char* path,enum VIEW_MODE mode){
         printf("[ WIDTH HEIGHT SIZE ]\n%d %d %d\n",map.mapWidth,map.mapHeight,map.mapSize);
         for(int i = 0; i < map.mapHeight; i++){
         	for(int j = 0; j < map.mapWidth; j++){
-			printf("%d ",map.buffer[i * map.mapHeight + j]);
+			printf("%d ",map.buffer[i * map.mapWidth + j]);
 		}
 		printf("\n");
 	}
@@ -82,10 +79,12 @@ Map2D loadMap(char* path,enum VIEW_MODE mode){
 }
 
 void drawMap2D(Map2D* map){
+                        //mx = (int)(rx / map->mapSize); my = (int)(ry / map->mapSize);
+                        //mPos = my * map->mapWidth + mx;
     int x = 0; int y = 0;
     for(y = 0; y < map->mapHeight; y++){
         for(x = 0; x < map->mapWidth; x++){
-		int mPos = y * map->mapHeight + x;
+		int mPos = y * map->mapWidth + x;
             if(map->buffer[mPos]==1)//Wall
                 glColor3f(1.0f,1.0f,1.0f);
             else
