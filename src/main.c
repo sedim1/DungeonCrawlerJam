@@ -21,6 +21,7 @@ void ProcessInput();
 void PlayerInput();
 
 
+
 //Window
 GLFWwindow* window;
 
@@ -33,7 +34,6 @@ Entity player;
 int SCREEN_WIDTH = 800;
 int SCREEN_HEIGHT = 640;
 float distToProjPlane;
-float angleStep;
 
 int main(int argc,char* argv[]){
     if(!init())
@@ -84,12 +84,10 @@ bool init(){
     map = loadMap("Map/testMap.txt",MAP2D);
 
     //Set Up entities in the world
-    player.position.x = 128 - 32;
-    player.position.y = 128 - 32;
-	    player.angle = 0.02f;
+    player.position = cellCordToCartesian(3,1,64);
+	    player.angle = 0.0f;
 
 	distToProjPlane = ((SCREEN_WIDTH / 2.0f)) / tan((degToRad(FOV)/2.0f));
-	angleStep = FOV / SCREEN_WIDTH;
 
 	return true;
 }
@@ -128,7 +126,8 @@ void draw3DProjection(){
 	int rays = 0;
         float distH,distV,dist;
         Entity r = player;//The ray represented as an entity;
-        r.angle = player.angle+(RAYS/2); r.angle = angleAdjust(r.angle);
+        r.angle = player.angle+(FOV/2); r.angle = angleAdjust(r.angle);
+        float angleStep = (float)FOV / (float)RAYS;
         //Get the position in cell cord where the ray starts to get caste
         for(rays = 0; rays < RAYS ; rays++){
                 VECTOR2D rayH = castRayH(&map,&r);
@@ -143,6 +142,7 @@ void draw3DProjection(){
 		dist = dist * cos(degToRad(ca));
 		//Draw 3D WALSS
 		float vOffset = PROJECTION_HEIGHT/2;
+		float hOffset = PROJECTION_WIDTH/2;
 		float projectedSliceHeight = (map.mapSize / dist) * distToProjPlane;
 		float topPoint = (int)(vOffset - projectedSliceHeight/2);
 		float bottomPoint = (int)(vOffset + projectedSliceHeight/2);
@@ -152,10 +152,10 @@ void draw3DProjection(){
 		//Draw points of the wall
 		for(int y = topPoint; y <= bottomPoint; y++){
 			glBegin(GL_POINTS);
-			glVertex2i(80 + rays * PIXEL_SIZE,y);
+			glVertex2i(rays * PIXEL_SIZE,y);
 			glEnd();
 		}
-                r.angle -= 1.0f; r.angle = angleAdjust(r.angle);
+                r.angle -= angleStep; r.angle = angleAdjust(r.angle);
         }
 }
 

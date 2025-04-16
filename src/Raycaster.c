@@ -20,6 +20,13 @@ CellCord cartesianToCellCords(float x,float y,int cellSize){
 	return res;
 }
 
+VECTOR2D cellCordToCartesian(int x, int y,int cellSize){
+        VECTOR2D cartesian;
+        cartesian.x = (x * cellSize) + (cellSize/2.0f);
+        cartesian.y = (y * cellSize) + (cellSize/2.0f);
+        return cartesian;
+}
+
 float length(VECTOR2D* a, VECTOR2D* b){
 	float l = 0.0f;
 	float dx = b->x - a->x;
@@ -115,7 +122,7 @@ VECTOR2D castRayH(Map2D* map, Entity* entity){
                 xo = yo * aTan;
         }
         if(rayAngle == 0 || rayAngle == 180.0f){//looking left or right
-                dof = 8;rx = entity->position.x; ry = entity->position.y;
+                rayAngle+=0.0001f;
         }
 	while(dof<8){//Check if it hits a wall on the map layout
                         mx = (int)(rx / map->mapSize); my = (int)(ry / map->mapSize);
@@ -145,14 +152,14 @@ VECTOR2D castRayV(Map2D* map, Entity* entity){
                         xo = -map->mapSize;
                         yo = (xo * nTan);
                 }
-                else if(rayAngle < 90.0f || rayAngle > 270.0f){//Looking right
+                if(rayAngle < 90.0f || rayAngle > 270.0f){//Looking right
                         rx = playerPos.x * map->mapSize + map->mapSize;
                         ry = -(entity->position.x-rx) * nTan + entity->position.y;
                         xo = map->mapSize;
                         yo = (xo * nTan);
                 }
                 else if(rayAngle == 90.0f || rayAngle == 270.0f){//looking up or down
-                        dof = 8;rx = entity->position.x; ry = entity->position.y;
+                        rayAngle+=0.0001f;
                 }
 		while(dof<8){//Check if it hits a wall on the map layout
                         mx = (int)(rx / map->mapSize); my = (int)(ry / map->mapSize);
@@ -174,7 +181,8 @@ void drawRays3D(Map2D* map,Entity* entity){
 	int rays = 0;
 	float distH,distV,dist;
 	Entity r = *entity;//The ray represented as an entity;
-	r.angle = entity->angle-(RAYS/2); r.angle = angleAdjust(r.angle);
+        float angleStep = (float)FOV / (float)RAYS;
+	r.angle = entity->angle + ((float)FOV/2.0f); r.angle = angleAdjust(r.angle);
 	//Get the position in cell cord where the ray starts to get caste
 	for(rays = 0; rays < RAYS;rays++){
 		VECTOR2D rayH = castRayH(map,&r);
@@ -188,6 +196,7 @@ void drawRays3D(Map2D* map,Entity* entity){
 		glBegin(GL_LINES);
 		glVertex3i(entity->position.x,entity->position.y,1);glVertex3i(ray.x,ray.y,1);
 		glEnd();
-		r.angle += 1.0f; r.angle = angleAdjust(r.angle);
+		r.angle -= angleStep; r.angle = angleAdjust(r.angle);
 	}
 }
+
