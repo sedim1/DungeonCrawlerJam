@@ -15,7 +15,7 @@
 #define PROJECTION_HEIGHT 640
 #define LINE_HEIGHT 320
 #define FOV 60
-#define PIXEL_SIZE 1
+#define PIXEL_SIZE 4
 #define RAYS (PROJECTION_WIDTH / PIXEL_SIZE)
 #define CELLSIZE 64
 
