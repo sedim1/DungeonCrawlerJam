@@ -164,11 +164,11 @@ void draw3DProjection(){
                 dist = (distH < distV) ? distH : distV; //Save distance of the selected wall
                 float shadow = (distH < distV) ? 1.0f : 0.5f; //Save distance of the selected wall
 		float ca = player.angle - r.angle; ca = angleAdjust(ca);
-		dist = dist * cos(degToRad(ca));
+		float correctedDist = dist * cos(degToRad(ca));
 		//Draw 3D WALSS
 		float vOffset = PROJECTION_HEIGHT/2;
 		float hOffset = PROJECTION_WIDTH/2;
-		float projectedSliceHeight = (map.mapSize / dist) * distToProjPlane;
+		float projectedSliceHeight = (map.mapSize / correctedDist) * distToProjPlane;
 		float topPoint = (int)(vOffset - projectedSliceHeight/2);
 		float bottomPoint = (int)(vOffset + projectedSliceHeight/2);
 		if(bottomPoint>PROJECTION_HEIGHT)
