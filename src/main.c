@@ -19,7 +19,13 @@ void ProcessInput();
 
 //Player functions
 void PlayerInput();
-
+void playerUpdate();
+void rotateView();
+void rotateLeft();
+void rotateRight();
+bool dirPressed();
+bool movePressed();
+void movePlayer();
 
 
 //Window
@@ -29,6 +35,12 @@ GLFWwindow* window;
 Map2D map;
 //Entities in the map
 Entity player;
+enum DIRECTION playerDir;
+enum DIRECTION keyPressed;
+bool canTurn = true;
+bool canMove = true;
+float tPos = 0.0f;
+int turn; //1 right - -1 left
 
 //Screen Size
 int SCREEN_WIDTH = 800;
@@ -39,6 +51,7 @@ float distToProjPlane;
 float deltaTime;
 float currentTime = 0.0f;
 float lastTime = 0.0f;
+
 
 
 int main(int argc,char* argv[]){
@@ -92,6 +105,7 @@ bool init(){
     //Set Up entities in the world
     player.position = cellCordToCartesian(3,1,64);
 	    player.angle = 0.0f;
+	    playerDir = RIGHT;
 
 	distToProjPlane = ((SCREEN_WIDTH / 2.0f)) / tan((degToRad(FOV)/2.0f));
 
@@ -110,6 +124,7 @@ void Update(){
 	deltaTime = currentTime - lastTime;
 	lastTime = currentTime;
         ProcessInput();
+	playerUpdate();
         //Draw on Screen
         Draw();
     }
@@ -192,26 +207,187 @@ void ProcessInput(){
     if(glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
 	    map.projection = PROJECTION3D;
 
-    PlayerInput();
+}
+
+void playerUpdate(){
+	if(player.state == ROTATING){
+		if(turn == 1)
+			rotateLeft();
+		else if(turn == -1)
+			rotateRight();
+	}
+	else if(player.state == MOVING){
+		movePlayer();
+	}
+	else if(player.state == IDLE){
+		if(!canTurn)
+			canTurn = !dirPressed();
+		if(!canMove)
+			canMove = !movePressed();
+    		PlayerInput();
+	}
+}
+
+bool movePressed(){
+    return glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS;
+}
+
+bool dirPressed(){
+    return glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS;
+}
+
+void rotateLeft(){
+	bool finished = false;
+	switch(playerDir){
+		case 0://UP
+			player.angle += 200.0f * deltaTime;
+			if(player.angle >= 90.0f){
+				finished = true; player.angle = 90.0f;}
+			break;
+		case 1://DOWN
+			player.angle += 200.0f * deltaTime;
+			if(player.angle >= 270.0f){
+				finished = true;player.angle = 270.0f;}
+			break;
+		case 2://LEFT
+			player.angle += 200.0f * deltaTime;
+			if(player.angle >= 180.0f){
+				finished = true; player.angle = 180.0f;}
+			break;
+		case 3://RIGHT
+			player.angle += 200.0f * deltaTime;
+			if(player.angle >= 360.0f){
+				finished = true; player.angle = 360.0f;
+				player.angle = angleAdjust(player.angle);
+			}
+			break;
+	}
+	if(finished)
+		player.state = IDLE;
+
+}
+
+void rotateRight(){
+	 bool finished = false;
+        switch(playerDir){ 
+                case 0://UP
+                        player.angle -= 200.0f * deltaTime;                               
+                        if(player.angle <= 90.0f){
+                                finished = true; player.angle = 90.0f;}
+                        break;
+                case 1://DOWN
+                        player.angle -= 200.0f * deltaTime;                               
+        		player.angle = angleAdjust(player.angle);
+                        if(player.angle <= 270.0f){
+                                finished = true;player.angle = 270.0f;}
+                        break;
+                case 2://LEFT
+                        player.angle -= 200.0f * deltaTime;                                
+                        if(player.angle <= 180.0f){
+                                finished = true; player.angle = 180.0f;}
+                        break;
+                case 3://RIGHT
+                        player.angle -= 200.0f * deltaTime;                               
+                        if(player.angle <= 0.0f){
+                                finished = true; player.angle = 0.0f;
+				player.angle = angleAdjust(player.angle);
+			}
+                        break;
+        }
+        if(finished)
+                player.state = IDLE;
+
+}
+
+void movePlayer(){
+	player.position = lerp(&player.currentPos,&player.nextPos,tPos);
+	tPos += 0.1f * 100.0f * deltaTime;
+	if(tPos>=1.0f){
+		player.position = player.nextPos;
+		player.state = IDLE;
+	}
 }
 
 void PlayerInput(){
-    float dx = cos(degToRad(player.angle));
-    float dy = -sin(degToRad(player.angle));
-    if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS){
-        player.position.x += dx * 4;
-        player.position.y += dy * 4;
+    if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && canMove){
+	    keyPressed = UP;
+	    player.state = MOVING;
+	    canMove = false;
+	    tPos = 0.0f;
+	    player.currentPos = player.position; player.nextPos = player.position;
+	    switch(playerDir){ //check current direction
+                    case 0: //UP
+                            player.nextPos.y -= CELLSIZE;
+                            break;
+                    case 1: //DOWN  
+                            player.nextPos.y += CELLSIZE;
+                            break;
+                    case 2: //LEFT
+                            player.nextPos.x -= CELLSIZE;
+                            break;
+                    case 3: //RIGHT
+                            player.nextPos.x  += CELLSIZE;
+                            break;
+            }
     }
-    if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS){
-        player.position.x -= dx * 4;
-        player.position.y -= dy * 4;
+    if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS && canMove){
+	    keyPressed = DOWN;
+	player.state = MOVING;
+	canMove = false;
+	tPos = 0.0f;
+	tPos = 0.0f;
+            player.currentPos = player.position; player.nextPos = player.position;
+            switch(playerDir){ //check current direction
+                    case 0: //UP
+                            player.nextPos.y += CELLSIZE;
+                            break;
+                    case 1: //DOWN  
+                            player.nextPos.y -= CELLSIZE;
+                            break;
+                    case 2: //LEFT
+                            player.nextPos.x += CELLSIZE;
+                            break;
+                    case 3: //RIGHT
+                            player.nextPos.x  -= CELLSIZE;
+                            break;
+            }
     }
-    if(glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS){
-        player.angle +=100.0f * deltaTime;
-    	player.angle = angleAdjust(player.angle);
+    if(glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS && canTurn){ //Turn left
+	    switch(playerDir){ //check current direction
+		    case 0: //UP
+			    playerDir = LEFT;
+			    break;
+		    case 1: //DOWN
+			    playerDir = RIGHT;
+			    break;
+		    case 2: //LEFT
+			    playerDir = DOWN;
+			    break;
+		    case 3: //RIGHT
+			    playerDir = UP;
+			    break;
+	    }
+	    turn = 1;
+	    player.state = ROTATING;
+	    canTurn = false;
     }
-    if(glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS){
-        player.angle -= 100.0f * deltaTime;
-    	player.angle = angleAdjust(player.angle);
+    if(glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS && canTurn){ //TURN RIGHT
+	    switch(playerDir){ //check current direction
+                    case 0: //UP
+                            playerDir = RIGHT;
+                            break;
+                    case 1: //DOWN  
+                            playerDir = LEFT;
+                            break;
+                    case 2: //LEFT
+                            playerDir = UP;
+                            break;
+                    case 3: //RIGHT
+                            playerDir = DOWN;  
+                            break;
+            }
+	    turn = -1;
+	    player.state = ROTATING;
+	    canTurn = false;
     }
 }

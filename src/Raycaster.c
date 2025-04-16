@@ -35,6 +35,23 @@ float length(VECTOR2D* a, VECTOR2D* b){
 	return l;
 }
 
+float moveToward(float from,float to,float delta){
+	float res = from + delta;
+	if(res >= to)
+		res = to;
+	return res;
+}
+
+VECTOR2D lerp(VECTOR2D* A, VECTOR2D* B,float t){
+	VECTOR2D res;
+	//(ax,ay) + ( (bx,by) - (ax,ay) ) * t
+	//(ax,ay) + ( (bx-ax,by-ay) ) * t
+	//(ax,ay) +  ( t * (bx-ax), t * (by-ay) )
+	res.x = A->x + (t * (B->x - A->x));
+	res.y = A->y + (t * (B->y - A->y));
+	return res;
+}
+
 //Map2D functions
 Map2D loadMap(char* path,enum VIEW_MODE mode){
     Map2D map;

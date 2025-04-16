@@ -12,16 +12,23 @@
 #define MAX 100
 #define M_PI 3.14159265358979323846
 #define PROJECTION_WIDTH 800
-#define PROJECTION_HEIGHT 450
+#define PROJECTION_HEIGHT 580
 #define RAYS 100
 #define LINE_HEIGHT 320
-#define FOV 75
+#define FOV 60
 #define PIXEL_SIZE 8
 #define CELLSIZE 64
 
 enum VIEW_MODE{
 	MAP2D, //For visually debugging the map on a grid
 	PROJECTION3D,
+};
+
+enum DIRECTION{
+	UP,
+	DOWN,
+	LEFT,
+	RIGHT,
 };
 
 
@@ -41,7 +48,8 @@ float angleAdjust(float degrees);
 CellCord cartesianToCellCords(float x, float y, int cellSize);
 VECTOR2D cellCordToCartesian(int x, int y, int cellSize);
 float length(VECTOR2D* a, VECTOR2D* b);
-
+VECTOR2D lerp(VECTOR2D* A, VECTOR2D* B,float t);
+float moveToward(float from,float to,float delta);
 
 //For handling the 2D map
 typedef struct{
@@ -59,18 +67,18 @@ void drawMap2D(Map2D* map);
 enum EntityState {
 	IDLE,
 	MOVING,
+	ROTATING,
 	ATTACKING,
 };
 
 typedef struct{
 	float angle;
-	VECTOR2D position;
+	VECTOR2D position; //Actual position
+	VECTOR2D currentPos; //Actual position
+	VECTOR2D nextPos; //Actual position
+	CellCord mapPos; //Position on the grid
 	enum EntityState state;
 }Entity;
-
-//PlayerFunctions
-void playerUpdate(Entity* player);
-
 
 void drawEntityOnMap(Entity* entity);
 
