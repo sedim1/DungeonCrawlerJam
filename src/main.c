@@ -45,7 +45,7 @@ float tPos = 0.0f;
 int turn; //1 right - -1 left
 
 //Screen Size
-int SCREEN_WIDTH = 800;
+int SCREEN_WIDTH = 1024;
 int SCREEN_HEIGHT = 640;
 float distToProjPlane;
 
