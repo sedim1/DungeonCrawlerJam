@@ -97,7 +97,7 @@ void drawMap2D(Map2D* map){
             //Draw points on screen
             glBegin(GL_TRIANGLES);
             glVertex2i(x1+1,y1+1);
-            glVertex2i(x2-1,y2+1);
+           glVertex2i(x2-1,y2+1);
             glVertex2i(x3+1,y3-1);
             glVertex2i(x2-1,y2+1);
             glVertex2i(x3+1,y3-1);

@@ -6,13 +6,13 @@
 #include <math.h>
 #include <string.h>
 #include "glad/glad.h"
-#include <GLFW/glfw3.h>
+#include "GLFW/glfw3.h"
 
 
 #define MAX 100
 #define M_PI 3.14159265358979323846
 #define PROJECTION_WIDTH 800
-#define PROJECTION_HEIGHT 480
+#define PROJECTION_HEIGHT 640
 #define FOV 60
 #define PIXEL_SIZE 4
 #define RAYS (PROJECTION_WIDTH / PIXEL_SIZE)

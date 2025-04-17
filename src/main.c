@@ -5,6 +5,7 @@
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
 #include "Raycaster.h"
+#include "BFS.h"
 #define SPEED 50.0
 #define RSPEED 380.0
 
@@ -107,9 +108,7 @@ bool init(){
     player.position = cellCordToCartesian(3,1,64);
 	    player.angle = 0.0f;
 	    playerDir = RIGHT;
-
 	distToProjPlane = ((SCREEN_WIDTH / 2.0f)) / tan((degToRad(FOV)/2.0f));
-
 	return true;
 }
 
@@ -143,8 +142,11 @@ void Draw(){
 }
 
 void draw2DProjection(){
-    drawEntityOnMap(&player);
-    drawMap2D(&map);
+	CellCord start = cartesianToCellCords(player.position.x,player.position.y,map.mapSize);
+        CellCord end = {6,7};
+        drawBFS(&map,&start,&end);
+    	drawEntityOnMap(&player);
+    	drawMap2D(&map);
 }
 
 void draw3DProjection(){
