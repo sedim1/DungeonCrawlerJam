@@ -83,8 +83,6 @@ Map2D loadMap(char* path,enum VIEW_MODE mode){
 }
 
 void drawMap2D(Map2D* map){
-                        //mx = (int)(rx / map->mapSize); my = (int)(ry / map->mapSize);
-                        //mPos = my * map->mapWidth + mx;
     int x = 0; int y = 0;
     for(y = 0; y < map->mapHeight; y++){
         for(x = 0; x < map->mapWidth; x++){
@@ -147,7 +145,7 @@ VECTOR2D castRayH(Map2D* map, Entity* entity){
 	while(dof<8){//Check if it hits a wall on the map layout
                         mx = (int)(rx / map->mapSize); my = (int)(ry / map->mapSize);
                         mPos = my * map->mapWidth + mx;
-                        if(mPos >= 0 && mPos < map->mapWidth*map->mapHeight && map->buffer[mPos]){
+                        if(mPos >= 0 && mPos < map->mapWidth*map->mapHeight && map->buffer[mPos] > 0){
                                 dof = 8;
                         }
                         else{
@@ -184,7 +182,7 @@ VECTOR2D castRayV(Map2D* map, Entity* entity){
 		while(dof<8){//Check if it hits a wall on the map layout
                         mx = (int)(rx / map->mapSize); my = (int)(ry / map->mapSize);
                         mPos = my * map->mapWidth + mx;
-                        if(mPos >= 0 && mPos < map->mapWidth*map->mapHeight && map->buffer[mPos]){
+                        if(mPos >= 0 && mPos < map->mapWidth*map->mapHeight && map->buffer[mPos] > 0){
                                 dof = 8;
                         }
                         else{

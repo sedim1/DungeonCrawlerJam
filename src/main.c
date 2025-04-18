@@ -6,8 +6,9 @@
 #include <GLFW/glfw3.h>
 #include "Raycaster.h"
 #include "BFS.h"
+#include "Textures/MapChecker.h"
 #define SPEED 30.0
-#define RSPEED 300.0
+#define RSPEED 320.0
 #define ENEMY_SPEED 50
 
 bool init();
@@ -63,7 +64,7 @@ CellCord path[5] = {{1,1},{2,5},{6,7},{15,5},{5,1}}; //POints where the enemy wi
 
 
 //Screen Size
-int SCREEN_WIDTH = 1024;
+int SCREEN_WIDTH = 800;
 int SCREEN_HEIGHT = 640;
 float distToProjPlane;
 
@@ -163,7 +164,7 @@ void Update(){
 }
 
 void Draw(){
-    glClearColor(0.0f,0.0f,0.0f,1.0f);
+    glClearColor(0.0f,0.4f,0.3f,1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     if( map.projection == MAP2D)
 	    draw2DProjection();
@@ -203,14 +204,26 @@ void draw3DProjection(){
 		float projectedSliceHeight = (map.mapSize / correctedDist) * distToProjPlane;
 		float topPoint = (int)(vOffset - projectedSliceHeight/2);
 		float bottomPoint = (int)(vOffset + projectedSliceHeight/2);
-		if(bottomPoint>PROJECTION_HEIGHT)
+		if(bottomPoint>PROJECTION_HEIGHT){
 			bottomPoint = PROJECTION_HEIGHT;
-		glColor3f(shadow,0.0f,0.0f);glPointSize(PIXEL_SIZE);
+		}
+		//Get Texture map
+		float ty = 0; float tyOffset = 0;
+		float tyStep = (float)TEXTURE_RESOLUTION / projectedSliceHeight;
+		float tx = (int)(ray.x/2.0f)%TEXTURE_RESOLUTION;
+		if(shadow == 1.0f){ tx = (int)(ray.x/2.0f)%TEXTURE_RESOLUTION;if(r.angle > 180.0f){tx=TEXTURE_RESOLUTION - 1 - tx;}}
+		else if(shadow == 0.5f){ tx = (int)(ray.y/2.0f)%TEXTURE_RESOLUTION;if(r.angle > 90.0f && r.angle < 270.0f){tx=TEXTURE_RESOLUTION - 1 - tx;}}
+		glPointSize(PIXEL_SIZE);
 		//Draw points of the wall
 		for(int y = topPoint; y <= bottomPoint; y++){
+
+			float c = mapCheckerTexture[(int)ty * 32 + (int)tx] * shadow;
+			float r = c * 1.0f;
+			glColor3f(r,c,c);
 			glBegin(GL_POINTS);
 			glVertex2i(rays * PIXEL_SIZE,y);
 			glEnd();
+			ty+=tyStep;
 		}
                 r.angle -= angleStep; r.angle = angleAdjust(r.angle);
         }

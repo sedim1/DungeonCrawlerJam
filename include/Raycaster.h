@@ -12,12 +12,13 @@
 
 #define MAX 100
 #define M_PI 3.14159265358979323846
-#define PROJECTION_WIDTH 1024
-#define PROJECTION_HEIGHT 640
+#define PROJECTION_WIDTH 800
+#define PROJECTION_HEIGHT 500
 #define FOV 60
-#define PIXEL_SIZE 8
+#define PIXEL_SIZE 4
 #define RAYS (PROJECTION_WIDTH / PIXEL_SIZE)
 #define CELLSIZE 64
+#define TEXTURE_RESOLUTION 32
 
 enum VIEW_MODE{
 	MAP2D, //For visually debugging the map on a grid
