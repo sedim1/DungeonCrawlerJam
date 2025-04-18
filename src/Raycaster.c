@@ -218,3 +218,34 @@ void drawRays3D(Map2D* map,Entity* entity){
 	}
 }
 
+
+float fogFactor(float distance){
+        float ambient = 1.0f;
+			if(distance > 50)
+				ambient = 0.75f;
+			if(distance > 75)
+				ambient = 0.65f;
+			if(distance > 100)
+				ambient = 0.60f;
+			if(distance > 125)
+				ambient = 0.55f;
+			if(distance > 150)
+				ambient = 0.5f;
+			if(distance > 175)
+				ambient = 0.45f;
+			if(distance > 200)
+				ambient = 0.40f;
+			if(distance > 225)
+				ambient = 0.35f;
+			if(distance > 250)
+				ambient = 0.30f;
+			if(distance > 275)
+				ambient = 0.25f;
+			if(distance > 300)
+				ambient = 0.1f;
+			if(distance > 325)
+				ambient = 0.05f;
+			if(distance > 350)
+				ambient = 0.0f;
+        return ambient;
+}

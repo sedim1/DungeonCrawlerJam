@@ -13,12 +13,17 @@
 #define MAX 100
 #define M_PI 3.14159265358979323846
 #define PROJECTION_WIDTH 800
-#define PROJECTION_HEIGHT 500
+#define PROJECTION_HEIGHT 640
 #define FOV 60
-#define PIXEL_SIZE 4
+#define PIXEL_SIZE 8
 #define RAYS (PROJECTION_WIDTH / PIXEL_SIZE)
 #define CELLSIZE 64
 #define TEXTURE_RESOLUTION 32
+#define MAP_SCALE 2
+#define BASE_FLOOR_SCALE 160
+#define FLOOR_SCALE (BASE_FLOOR_SCALE * MAP_SCALE)
+
+#define MAX_DIST 400
 
 enum VIEW_MODE{
 	MAP2D, //For visually debugging the map on a grid
@@ -92,4 +97,8 @@ void drawEntityOnMap(Entity* entity,float r,float g,float b);
 void drawRays3D(Map2D* map,Entity* entity);//Draw according to the view of an entity
 VECTOR2D castRayH(Map2D* map, Entity* entity);
 VECTOR2D castRayV(Map2D* map, Entity* entity);
+
+//For shading
+float fogFactor(float distance);
+
 #endif

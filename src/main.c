@@ -164,7 +164,7 @@ void Update(){
 }
 
 void Draw(){
-    glClearColor(0.0f,0.4f,0.3f,1.0f);
+    glClearColor(0.0f,0.0f,0.0f,1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     if( map.projection == MAP2D)
 	    draw2DProjection();
@@ -207,24 +207,60 @@ void draw3DProjection(){
 		if(bottomPoint>PROJECTION_HEIGHT){
 			bottomPoint = PROJECTION_HEIGHT;
 		}
+		float ambient = fogFactor(correctedDist);
+
 		//Get Texture map
 		float ty = 0; float tyOffset = 0;
 		float tyStep = (float)TEXTURE_RESOLUTION / projectedSliceHeight;
-		float tx = (int)(ray.x/2.0f)%TEXTURE_RESOLUTION;
-		if(shadow == 1.0f){ tx = (int)(ray.x/2.0f)%TEXTURE_RESOLUTION;if(r.angle > 180.0f){tx=TEXTURE_RESOLUTION - 1 - tx;}}
-		else if(shadow == 0.5f){ tx = (int)(ray.y/2.0f)%TEXTURE_RESOLUTION;if(r.angle > 90.0f && r.angle < 270.0f){tx=TEXTURE_RESOLUTION - 1 - tx;}}
+		float tx;
+		if(shadow == 1.0f){ tx = (int)(ray.x/MAP_SCALE)%TEXTURE_RESOLUTION;if(r.angle > 180.0f){tx=TEXTURE_RESOLUTION - 1 - tx;}}
+		else if(shadow == 0.5f){ tx = (int)(ray.y/MAP_SCALE)%TEXTURE_RESOLUTION;if(r.angle > 90.0f && r.angle < 270.0f){tx=TEXTURE_RESOLUTION - 1 - tx;}}
 		glPointSize(PIXEL_SIZE);
-		//Draw points of the wall
+		//Draw the walls
 		for(int y = topPoint; y <= bottomPoint; y++){
 
-			float c = mapCheckerTexture[(int)ty * 32 + (int)tx] * shadow;
-			float r = c * 1.0f;
-			glColor3f(r,c,c);
+			float c = mapCheckerTexture[(int)ty * TEXTURE_RESOLUTION + (int)tx] * ambient;
+			glColor3f(c,c/2,c/2);
 			glBegin(GL_POINTS);
 			glVertex2i(rays * PIXEL_SIZE,y);
 			glEnd();
 			ty+=tyStep;
 		}
+		int i = 0;
+		//Draw the floor
+		for(int y = bottomPoint;y < PROJECTION_HEIGHT;y++){
+
+			float dy = y-(PROJECTION_HEIGHT/2.0f); float raFixed = cos(degToRad(angleAdjust(player.angle-r.angle)));
+			float deg = degToRad(r.angle);
+			
+			float worldX = player.position.x / MAP_SCALE + cos(deg) * FLOOR_SCALE * TEXTURE_RESOLUTION / dy / raFixed;
+			float worldY = player.position.y / MAP_SCALE - sin(deg) * FLOOR_SCALE * TEXTURE_RESOLUTION / dy / raFixed;
+
+			// Fog: distancia aproximada desde el jugador
+			float dx = worldX - player.position.x / MAP_SCALE;
+			float dyFog = worldY - player.position.y / MAP_SCALE;
+			float distToFloorPoint = sqrtf(dx * dx + dyFog * dyFog) * MAP_SCALE;
+
+		
+			// Fog attenuation (you can tweak these values)
+			ambient = fogFactor(distToFloorPoint);
+
+			tx = player.position.x/MAP_SCALE + cos(deg)*FLOOR_SCALE*TEXTURE_RESOLUTION/dy/raFixed;
+			ty = player.position.y/MAP_SCALE - sin(deg)*FLOOR_SCALE*TEXTURE_RESOLUTION/dy/raFixed;
+			float c = mapCheckerTexture[((int)(ty)&TEXTURE_RESOLUTION-1) * TEXTURE_RESOLUTION + ((int)(tx)&TEXTURE_RESOLUTION-1) ] * ambient;
+
+
+			glColor3f(c,c,c);
+			glBegin(GL_POINTS);
+			glVertex2i(rays * PIXEL_SIZE,y);
+			glEnd();
+
+			glBegin(GL_POINTS);
+			glVertex2i(rays * PIXEL_SIZE,topPoint - i);
+			glEnd();
+			i++;
+		}
+
                 r.angle -= angleStep; r.angle = angleAdjust(r.angle);
         }
 }
