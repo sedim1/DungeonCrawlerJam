@@ -42,6 +42,10 @@ float moveToward(float from,float to,float delta){
 	return res;
 }
 
+bool equalCellCords(CellCord* A, CellCord* B){
+        return A->x == B->x && A->y == B->y;
+}
+
 VECTOR2D lerp(VECTOR2D* A, VECTOR2D* B,float t){
 	VECTOR2D res;
 	res.x = A->x + (t * (B->x - A->x));
@@ -107,10 +111,10 @@ void drawMap2D(Map2D* map){
     }
 }
 
-void drawEntityOnMap(Entity* entity){
+void drawEntityOnMap(Entity* entity,float r,float g, float b){
     float dx = cos(degToRad(entity->angle));
     float dy = -sin(degToRad(entity->angle));
-    glColor3f(1.0f,1.0f,0.0f);
+    glColor3f(r,g,b);
     glPointSize(8); glLineWidth(2);
     glBegin(GL_POINTS);glVertex3i(entity->position.x,entity->position.y,1);glEnd();
     glBegin(GL_LINES);glVertex3i(entity->position.x,entity->position.y,1);glVertex3i(entity->position.x + dx * 20,entity->position.y + dy * 20,1); glEnd();

@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <math.h>
 #include <string.h>
 #include "glad/glad.h"
@@ -14,7 +15,7 @@
 #define PROJECTION_WIDTH 1024
 #define PROJECTION_HEIGHT 640
 #define FOV 60
-#define PIXEL_SIZE 4
+#define PIXEL_SIZE 8
 #define RAYS (PROJECTION_WIDTH / PIXEL_SIZE)
 #define CELLSIZE 64
 
@@ -49,6 +50,7 @@ VECTOR2D cellCordToCartesian(int x, int y, int cellSize);
 float length(VECTOR2D* a, VECTOR2D* b);
 VECTOR2D lerp(VECTOR2D* A, VECTOR2D* B,float t);
 float moveToward(float from,float to,float delta);
+bool equalCellCords(CellCord* A, CellCord *B);
 
 //For handling the 2D map
 typedef struct{
@@ -67,19 +69,23 @@ enum EntityState {
 	IDLE,
 	MOVING,
 	ROTATING,
-	ATTACKING,
 };
 
+//Objects in the world
 typedef struct{
 	float angle;
 	VECTOR2D position; //Actual position
 	VECTOR2D currentPos; //Actual position
 	VECTOR2D nextPos; //Actual position
-	CellCord mapPos; //Position on the grid
 	enum EntityState state;
 }Entity;
 
-void drawEntityOnMap(Entity* entity);
+typedef struct{
+	float angle;
+	int x,y,z; //Position
+}Sprite;
+
+void drawEntityOnMap(Entity* entity,float r,float g,float b);
 
 //Raycasting functions for debugging
 void drawRays3D(Map2D* map,Entity* entity);//Draw according to the view of an entity

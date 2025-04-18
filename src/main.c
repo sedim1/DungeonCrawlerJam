@@ -6,8 +6,9 @@
 #include <GLFW/glfw3.h>
 #include "Raycaster.h"
 #include "BFS.h"
-#define SPEED 50.0
-#define RSPEED 380.0
+#define SPEED 30.0
+#define RSPEED 300.0
+#define ENEMY_SPEED 50
 
 bool init();
 void end();
@@ -15,6 +16,7 @@ void Update();
 void Draw();
 void draw2DProjection();
 void draw3DProjection();
+void initScene();
 
 void frameBufferSizeCallback(GLFWwindow* window,int w,int h);
 void ProcessInput();
@@ -30,6 +32,12 @@ bool movePressed();
 void movePlayer();
 bool wallCollision();
 
+//MainEnemyFunctions
+void mainEnemyUpdate();
+void moveEnemy();
+void passiveState(); //Will just be traveling to points of the map
+void agressiveState();// Will be following the player
+
 //Window
 GLFWwindow* window;
 
@@ -43,6 +51,16 @@ bool canTurn = true;
 bool canMove = true;
 float tPos = 0.0f;
 int turn; //1 right - -1 left
+//Enemy wolf
+Entity mainEnemy;
+int enemyState = 0; //Normal passive state, agressive state
+float tePos = 0.0f;
+int point = 0;
+float waitTime = 0.5f;
+float eTmove = 0.0f;
+float etCurrent = 0.0f;
+CellCord path[5] = {{1,1},{2,5},{6,7},{15,5},{5,1}}; //POints where the enemy will be traversing in normal state
+
 
 //Screen Size
 int SCREEN_WIDTH = 1024;
@@ -59,6 +77,7 @@ float lastTime = 0.0f;
 int main(int argc,char* argv[]){
     if(!init())
         return -1;
+    initScene();
     Update();
     end();
     return 0;
@@ -104,12 +123,24 @@ bool init(){
     //Load map
     map = loadMap("Map/testMap.txt",MAP2D);
 
-    //Set Up entities in the world
-    player.position = cellCordToCartesian(3,1,64);
-	    player.angle = 0.0f;
-	    playerDir = RIGHT;
 	distToProjPlane = ((SCREEN_WIDTH / 2.0f)) / tan((degToRad(FOV)/2.0f));
 	return true;
+}
+
+void initScene(){
+	    //Set Up enemy
+	    player.position = cellCordToCartesian(3,1,map.mapSize);
+	    player.angle = 0.0f;
+	    playerDir = RIGHT;
+	    player.state = IDLE;
+	    //SetUp Enemy
+	    mainEnemy.position = cellCordToCartesian(6,7,map.mapSize);
+	    mainEnemy.currentPos = mainEnemy.position;
+	    CellCord start  = {6,7}; CellCord end  = {3,1};
+	    CellCord nextPos = getNextPosition(&map,&start,&end);
+	    mainEnemy.nextPos = cellCordToCartesian(nextPos.x,nextPos.y,map.mapSize);
+	    mainEnemy.state = IDLE;
+	    eTmove = (float)glfwGetTime();
 }
 
 void end(){
@@ -124,6 +155,7 @@ void Update(){
 	deltaTime = currentTime - lastTime;
 	lastTime = currentTime;
         ProcessInput();
+	mainEnemyUpdate();
 	playerUpdate();
         //Draw on Screen
         Draw();
@@ -142,10 +174,8 @@ void Draw(){
 }
 
 void draw2DProjection(){
-	CellCord start = cartesianToCellCords(player.position.x,player.position.y,map.mapSize);
-        CellCord end = {6,7};
-        drawBFS(&map,&start,&end);
-    	drawEntityOnMap(&player);
+    	drawEntityOnMap(&player,1.0f,1.0f,0.0f);
+    	drawEntityOnMap(&mainEnemy,0.4f,0.0f,1.0f);
     	drawMap2D(&map);
 }
 
@@ -431,3 +461,51 @@ void PlayerInput(){
 	    canTurn = false;
     }
 }
+
+//Functions of the enemy
+void moveEnemy(){ //Moving in passive
+	mainEnemy.position = lerp(&mainEnemy.currentPos,&mainEnemy.nextPos,tePos);
+	tePos += 0.1f * ENEMY_SPEED * deltaTime;
+	if(tePos>=1.0f){
+		mainEnemy.position = mainEnemy.nextPos;
+		mainEnemy.state = IDLE;
+		tePos = 0.0f;
+		eTmove = (float)glfwGetTime();
+	}
+}
+
+void mainEnemyUpdate(){
+	//States for moving
+	if(mainEnemy.state == MOVING){ //move to that target
+		moveEnemy();
+	}
+	else if(mainEnemy.state == IDLE){ //On idle state keep track of the current target go
+		etCurrent = (float)glfwGetTime();
+		if(etCurrent - eTmove >= waitTime){
+			CellCord start = cartesianToCellCords(mainEnemy.position.x,mainEnemy.position.y,map.mapSize);
+			CellCord target = cartesianToCellCords(player.position.x,player.position.y,map.mapSize);
+			CellCord nextPos = getNextPosition(&map,&start,&target);
+			//Check if its in the same cell as player to not get undefined behavior
+			if(!equalCellCords(&start,&target)&&nextPos.x!=-1&&nextPos.y!=-1){
+					//Update angle based on the direction of the next cell
+					if(nextPos.y < start.y && nextPos.x == start.x)//Going up
+						mainEnemy.angle = 90.0f;
+					else if(nextPos.y > start.y && nextPos.x == start.x)//Going down
+						mainEnemy.angle = 270.0f;
+					else if(nextPos.y == start.y && nextPos.x < start.x)//Going left
+						mainEnemy.angle = 180.0f;
+					else if(nextPos.y == start.y && nextPos.x > start.x)//Going right
+						mainEnemy.angle = 0.0f;
+					mainEnemy.currentPos = mainEnemy.position;
+					mainEnemy.nextPos = cellCordToCartesian(nextPos.x,nextPos.y,map.mapSize);
+					mainEnemy.state = MOVING;
+			}
+		}
+	}
+
+}
+
+void passiveState(){}
+
+void agressiveState(){}
+
