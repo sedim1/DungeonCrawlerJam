@@ -25,6 +25,8 @@ void initScene();
 void frameBufferSizeCallback(GLFWwindow* window,int w,int h);
 void ProcessInput();
 
+void draw2DSprite(Sprite* s);
+
 //Player functions
 void PlayerInput();
 void playerUpdate();
@@ -60,6 +62,7 @@ int turn; //1 right - -1 left
 //Enemy wolf
 Entity mainEnemy;
 int enemyState = 0; //Normal passive state, agressive state
+Sprite enemy;
 float tePos = 0.0f;
 int point = 0;
 float waitTime = 0.5f;
@@ -69,7 +72,7 @@ CellCord path[5] = {{1,1},{2,5},{6,7},{15,5},{5,1}}; //POints where the enemy wi
 
 
 //Screen Size
-int SCREEN_WIDTH = 800;
+int SCREEN_WIDTH = 768;
 int SCREEN_HEIGHT = 640;
 float distToProjPlane;
 
@@ -77,6 +80,7 @@ float distToProjPlane;
 float deltaTime;
 float currentTime = 0.0f;
 float lastTime = 0.0f;
+
 
 
 
@@ -175,8 +179,10 @@ void Draw(){
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     if( map.projection == MAP2D)
 	    draw2DProjection();
-    if( map.projection == PROJECTION3D)
+    if( map.projection == PROJECTION3D){
+	    draw2DSprite(&enemy);
 	    draw3DProjection();
+    }
     glfwPollEvents();
     glfwSwapBuffers(window);
 }
@@ -187,14 +193,34 @@ void draw2DProjection(){
     	drawMap2D(&map);
 }
 
+void draw2DSprite(Sprite* s){
+	float sx = s->x - player.position.x;
+	float sy = s->y - player.position.y;
+        float sz = s->z;
+
+	float CS = cos(degToRad(player.angle));
+	float SN = sin(degToRad(player.angle));
+	float a = sx * CS - sy * SN;
+	float b = sy * SN + sy * CS;
+	sx = a; sy = b;
+
+	sx = (sx * 108.0/sy)+(120/2);
+	sy = (sz * 108.0/sy)+(80/2);
+
+	//Convert to screen space (x,y)
+	printf("sx %d sy%d\n",sx,sy);
+	glPointSize(PIXEL_SIZE); glColor3f(1,1,0);glBegin(GL_POINTS);glVertex2i(sx * PIXEL_SIZE,sy * PIXEL_SIZE);glEnd();
+}
+
 void draw3DProjection(){
+	float cr = 0.5f, cg = 0.6, cb =  0.2;
 	int rays = 0;
         float distH,distV,dist;
         Entity r = player;//The ray represented as an entity;
         r.angle = player.angle+(FOV/2); r.angle = angleAdjust(r.angle);
         float angleStep = (float)FOV / (float)RAYS;
         //Get the position in cell cord where the ray starts to get caste
-        for(rays = 0; rays < RAYS ; rays++){
+        for(rays = 0; rays <= RAYS ; rays++){
 		int vtm =0; int vhm = 0;
 		float red = 0.0f, green = 0.0f, blue = 0.0f; int pixel = 0;
                 VECTOR2D rayH = castRayH(&map,&r,&vhm);
@@ -232,7 +258,7 @@ void draw3DProjection(){
 			red = (wallTextures[pixel+0]);
 			green = (wallTextures[pixel+1]);
 			blue = (wallTextures[pixel+2]);
-			glColor3f((red / 255.0f) * ambient,(green / 255.0f) * ambient,(blue / 255.0f) * ambient);
+			glColor3f((red / 255.0f) * ambient * cr,(green / 255.0f) * ambient * cg,(blue / 255.0f) * ambient * cb);
 			glBegin(GL_POINTS);
 			glVertex2i(rays * PIXEL_SIZE,y);
 			glEnd();
@@ -266,7 +292,7 @@ void draw3DProjection(){
 			red = (texturedFloors[pixel+0]/255.0f);
 			green = (texturedFloors[pixel+1]/255.0f);
 			blue = (texturedFloors[pixel+2]/255.0f);
-			glColor3f((red) * ambient ,(green) * ambient ,(blue) * ambient);
+			glColor3f((red) * ambient * cr ,(green) * ambient * cg ,(blue) * ambient * cb);
 			glBegin(GL_POINTS);
 			glVertex2i(rays * PIXEL_SIZE,y);
 			glEnd();
@@ -282,7 +308,7 @@ void draw3DProjection(){
 				blue = (texturedCeiling[pixel+2]/255.0f);
 			}
 			else{ red = 0.0f; blue = 0.0f; green = 0.0f;}
-			glColor3f((red) * ambient ,(green) * ambient ,(blue) * ambient);
+			glColor3f((red) * ambient * cr ,(green) * ambient * cg ,(blue) * ambient * cb);
 			glBegin(GL_POINTS);
 			glVertex2i(rays * PIXEL_SIZE,topPoint - i);
 			glEnd();

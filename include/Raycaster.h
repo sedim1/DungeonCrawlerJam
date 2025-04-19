@@ -12,10 +12,10 @@
 
 #define MAX 100
 #define M_PI 3.14159265358979323846
-#define PROJECTION_WIDTH 800
+#define PROJECTION_WIDTH 768
 #define PROJECTION_HEIGHT 640
 #define FOV 60
-#define PIXEL_SIZE 8
+#define PIXEL_SIZE 2
 #define RAYS (PROJECTION_WIDTH / PIXEL_SIZE)
 #define CELLSIZE 64
 #define TEXTURE_RESOLUTION 32
@@ -87,9 +87,13 @@ typedef struct{
 }Entity;
 
 typedef struct{
-	float angle;
-	int x,y,z; //Position
+	int type; 
+	int state;
+	int texMap;
+	int x, y, z;
 }Sprite;
+
+
 
 void drawEntityOnMap(Entity* entity,float r,float g,float b);
 
