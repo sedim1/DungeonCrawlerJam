@@ -7,6 +7,9 @@
 #include "Raycaster.h"
 #include "BFS.h"
 #include "Textures/MapChecker.h"
+#include "Textures/walls.h"
+#include "Textures/floors.h"
+#include "Textures/ceiling.ppm"
 #define SPEED 30.0
 #define RSPEED 320.0
 #define ENEMY_SPEED 50
@@ -44,6 +47,8 @@ GLFWwindow* window;
 
 //Map
 Map2D map;
+Map2D floors;
+Map2D ceiling;
 //Entities in the map
 Entity player;
 enum DIRECTION playerDir;
@@ -122,7 +127,9 @@ bool init(){
     glfwSetFramebufferSizeCallback(window, frameBufferSizeCallback); 
 
     //Load map
-    map = loadMap("Map/testMap.txt",MAP2D);
+    map = loadMap("Map/walls.txt",MAP2D);
+    floors = loadMap("Map/floors.txt",MAP2D);
+    ceiling = loadMap("Map/ceiling.txt",MAP2D);
 
 	distToProjPlane = ((SCREEN_WIDTH / 2.0f)) / tan((degToRad(FOV)/2.0f));
 	return true;
@@ -188,12 +195,15 @@ void draw3DProjection(){
         float angleStep = (float)FOV / (float)RAYS;
         //Get the position in cell cord where the ray starts to get caste
         for(rays = 0; rays < RAYS ; rays++){
-                VECTOR2D rayH = castRayH(&map,&r);
-                VECTOR2D rayV = castRayV(&map,&r);
+		int vtm =0; int vhm = 0;
+		float red = 0.0f, green = 0.0f, blue = 0.0f; int pixel = 0;
+                VECTOR2D rayH = castRayH(&map,&r,&vhm);
+                VECTOR2D rayV = castRayV(&map,&r,&vtm);
                 VECTOR2D ray;
                 distH = length(&player.position,&rayH);                                                                                                                     
                 distV = length(&player.position,&rayV);                                                                                                                     
-                ray = (distH < distV) ? rayH : rayV;                                                                                                                         
+                ray = (distV < distH) ? rayV : rayH;                                                                                                                         
+                int mapVal = (distV < distH) ? vtm : vhm;                                                                                                                         
                 dist = (distH < distV) ? distH : distV; //Save distance of the selected wall
                 float shadow = (distH < distV) ? 1.0f : 0.5f; //Save distance of the selected wall
 		float ca = player.angle - r.angle; ca = angleAdjust(ca);
@@ -210,17 +220,19 @@ void draw3DProjection(){
 		float ambient = fogFactor(correctedDist);
 
 		//Get Texture map
-		float ty = 0; float tyOffset = 0;
+		float ty = mapVal * TEXTURE_RESOLUTION; ; float tyOffset = 0;
 		float tyStep = (float)TEXTURE_RESOLUTION / projectedSliceHeight;
 		float tx;
 		if(shadow == 1.0f){ tx = (int)(ray.x/MAP_SCALE)%TEXTURE_RESOLUTION;if(r.angle > 180.0f){tx=TEXTURE_RESOLUTION - 1 - tx;}}
 		else if(shadow == 0.5f){ tx = (int)(ray.y/MAP_SCALE)%TEXTURE_RESOLUTION;if(r.angle > 90.0f && r.angle < 270.0f){tx=TEXTURE_RESOLUTION - 1 - tx;}}
 		glPointSize(PIXEL_SIZE);
 		//Draw the walls
-		for(int y = topPoint; y <= bottomPoint; y++){
-
-			float c = mapCheckerTexture[(int)ty * TEXTURE_RESOLUTION + (int)tx] * ambient;
-			glColor3f(c,c/2,c/2);
+		for(int y = topPoint; y < bottomPoint; y++){
+			pixel = ((int)ty*TEXTURE_RESOLUTION+(int)tx) * 3;
+			red = (wallTextures[pixel+0]);
+			green = (wallTextures[pixel+1]);
+			blue = (wallTextures[pixel+2]);
+			glColor3f((red / 255.0f) * ambient,(green / 255.0f) * ambient,(blue / 255.0f) * ambient);
 			glBegin(GL_POINTS);
 			glVertex2i(rays * PIXEL_SIZE,y);
 			glEnd();
@@ -229,35 +241,52 @@ void draw3DProjection(){
 		int i = 0;
 		//Draw the floor
 		for(int y = bottomPoint;y < PROJECTION_HEIGHT;y++){
-
+			//Draw floor
 			float dy = y-(PROJECTION_HEIGHT/2.0f); float raFixed = cos(degToRad(angleAdjust(player.angle-r.angle)));
 			float deg = degToRad(r.angle);
-			
 			float worldX = player.position.x / MAP_SCALE + cos(deg) * FLOOR_SCALE * TEXTURE_RESOLUTION / dy / raFixed;
 			float worldY = player.position.y / MAP_SCALE - sin(deg) * FLOOR_SCALE * TEXTURE_RESOLUTION / dy / raFixed;
-
 			// Fog: distancia aproximada desde el jugador
 			float dx = worldX - player.position.x / MAP_SCALE;
 			float dyFog = worldY - player.position.y / MAP_SCALE;
 			float distToFloorPoint = sqrtf(dx * dx + dyFog * dyFog) * MAP_SCALE;
-
-		
-			// Fog attenuation (you can tweak these values)
+			//Getting the floor tile to get the textyre
+			int fx = (int)(worldX / TEXTURE_RESOLUTION);
+			int fy = (int)(worldY / TEXTURE_RESOLUTION);
+			int floorTile = 0;
+			if(fx >= 0 && fx < map.mapWidth && fy >= 0 && fy < map.mapHeight)
+				floorTile = floors.buffer[fy * map.mapWidth + fx] - 1;
+			// Fog attenuation
 			ambient = fogFactor(distToFloorPoint);
+			tx = player.position.x/MAP_SCALE + (cos(deg)*FLOOR_SCALE*TEXTURE_RESOLUTION/dy/raFixed);
+			ty = player.position.y/MAP_SCALE - (sin(deg)*FLOOR_SCALE*TEXTURE_RESOLUTION/dy/raFixed);
 
-			tx = player.position.x/MAP_SCALE + cos(deg)*FLOOR_SCALE*TEXTURE_RESOLUTION/dy/raFixed;
-			ty = player.position.y/MAP_SCALE - sin(deg)*FLOOR_SCALE*TEXTURE_RESOLUTION/dy/raFixed;
-			float c = mapCheckerTexture[((int)(ty)&TEXTURE_RESOLUTION-1) * TEXTURE_RESOLUTION + ((int)(tx)&TEXTURE_RESOLUTION-1) ] * ambient;
-
-
-			glColor3f(c,c,c);
+			int mp = floorTile * TEXTURE_RESOLUTION * TEXTURE_RESOLUTION;
+			pixel = (((int)(ty) & (TEXTURE_RESOLUTION - 1)) * TEXTURE_RESOLUTION + ((int)(tx) & (TEXTURE_RESOLUTION - 1))) * 3 + mp * 3;
+			red = (texturedFloors[pixel+0]/255.0f);
+			green = (texturedFloors[pixel+1]/255.0f);
+			blue = (texturedFloors[pixel+2]/255.0f);
+			glColor3f((red) * ambient ,(green) * ambient ,(blue) * ambient);
 			glBegin(GL_POINTS);
 			glVertex2i(rays * PIXEL_SIZE,y);
 			glEnd();
 
+			//Draw Ceiling
+			if(fx >= 0 && fx < map.mapWidth && fy >= 0 && fy < map.mapHeight)
+				floorTile = ceiling.buffer[fy * map.mapWidth + fx] - 1;
+			mp = floorTile * TEXTURE_RESOLUTION * TEXTURE_RESOLUTION;
+			if(floorTile>= 0){
+				pixel = (((int)(ty) & (TEXTURE_RESOLUTION - 1)) * TEXTURE_RESOLUTION + ((int)(tx) & (TEXTURE_RESOLUTION - 1))) * 3 + mp * 3;
+				red = (texturedCeiling[pixel+0]/255.0f);
+				green = (texturedCeiling[pixel+1]/255.0f);
+				blue = (texturedCeiling[pixel+2]/255.0f);
+			}
+			else{ red = 0.0f; blue = 0.0f; green = 0.0f;}
+			glColor3f((red) * ambient ,(green) * ambient ,(blue) * ambient);
 			glBegin(GL_POINTS);
 			glVertex2i(rays * PIXEL_SIZE,topPoint - i);
 			glEnd();
+
 			i++;
 		}
 
@@ -418,7 +447,7 @@ bool wallPlayerCollision(){
 			break;
 	}
 	int mPos = gridPos.y * map.mapWidth + gridPos.x;// convert int into position on array
-	if(mPos >= 0 && mPos < map.mapWidth*map.mapHeight && map.buffer[mPos] == 1)
+	if(mPos >= 0 && mPos < map.mapWidth*map.mapHeight && map.buffer[mPos] > 0)
 		return true;
 	return false;
 }
@@ -557,4 +586,5 @@ void mainEnemyUpdate(){
 void passiveState(){}
 
 void agressiveState(){}
+
 

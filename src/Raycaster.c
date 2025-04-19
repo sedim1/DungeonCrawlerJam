@@ -87,7 +87,7 @@ void drawMap2D(Map2D* map){
     for(y = 0; y < map->mapHeight; y++){
         for(x = 0; x < map->mapWidth; x++){
 		int mPos = y * map->mapWidth + x;
-            if(map->buffer[mPos]==1)//Wall
+            if(map->buffer[mPos]>0)//Wall
                 glColor3f(1.0f,1.0f,1.0f);
             else
                 glColor3f(0.3f,0.3f,0.3f);
@@ -119,7 +119,7 @@ void drawEntityOnMap(Entity* entity,float r,float g, float b){
 }
 
 //Raycasting Functions
-VECTOR2D castRayH(Map2D* map, Entity* entity){
+VECTOR2D castRayH(Map2D* map, Entity* entity,int* mapVal){
 	VECTOR2D ray;
 	float rayAngle = entity->angle;
 	float rx,ry, xo, yo;
@@ -147,6 +147,7 @@ VECTOR2D castRayH(Map2D* map, Entity* entity){
                         mPos = my * map->mapWidth + mx;
                         if(mPos >= 0 && mPos < map->mapWidth*map->mapHeight && map->buffer[mPos] > 0){
                                 dof = 8;
+                                *mapVal = map->buffer[mPos] - 1;
                         }
                         else{
                                 rx += xo; ry += yo; dof+=1;
@@ -156,7 +157,7 @@ VECTOR2D castRayH(Map2D* map, Entity* entity){
 	return ray;
 }
 
-VECTOR2D castRayV(Map2D* map, Entity* entity){
+VECTOR2D castRayV(Map2D* map, Entity* entity,int* mapVal){
 	VECTOR2D ray;
 	float rayAngle = entity->angle;
 	float rx,ry, xo, yo;
@@ -184,6 +185,7 @@ VECTOR2D castRayV(Map2D* map, Entity* entity){
                         mPos = my * map->mapWidth + mx;
                         if(mPos >= 0 && mPos < map->mapWidth*map->mapHeight && map->buffer[mPos] > 0){
                                 dof = 8;
+                                *mapVal = map->buffer[mPos] - 1;
                         }
                         else{
                                 rx += xo; ry += yo; dof+=1;
@@ -203,8 +205,9 @@ void drawRays3D(Map2D* map,Entity* entity){
 	r.angle = entity->angle + ((float)FOV/2.0f); r.angle = angleAdjust(r.angle);
 	//Get the position in cell cord where the ray starts to get caste
 	for(rays = 0; rays < RAYS;rays++){
-		VECTOR2D rayH = castRayH(map,&r);
-		VECTOR2D rayV = castRayV(map,&r);
+                int v,t;
+		VECTOR2D rayH = castRayH(map,&r,&v);
+		VECTOR2D rayV = castRayV(map,&r,&t);
 		VECTOR2D ray;
 		distH = length(&entity->position,&rayH);
 		distV = length(&entity->position,&rayV);
@@ -220,32 +223,11 @@ void drawRays3D(Map2D* map,Entity* entity){
 
 
 float fogFactor(float distance){
-        float ambient = 1.0f;
-			if(distance > 50)
-				ambient = 0.75f;
-			if(distance > 75)
-				ambient = 0.65f;
-			if(distance > 100)
-				ambient = 0.60f;
-			if(distance > 125)
-				ambient = 0.55f;
-			if(distance > 150)
-				ambient = 0.5f;
-			if(distance > 175)
-				ambient = 0.45f;
-			if(distance > 200)
-				ambient = 0.40f;
-			if(distance > 225)
-				ambient = 0.35f;
-			if(distance > 250)
-				ambient = 0.30f;
-			if(distance > 275)
-				ambient = 0.25f;
-			if(distance > 300)
-				ambient = 0.1f;
-			if(distance > 325)
-				ambient = 0.05f;
-			if(distance > 350)
-				ambient = 0.0f;
-        return ambient;
+        float fogStart = 10.0f;
+    float fogEnd = 150.0f;
+
+    if (distance <= fogStart) return 1.0f;
+    if (distance >= fogEnd) return 0.0f;
+
+    return 1.0f - (distance - fogStart) / (fogEnd - fogStart);
 }

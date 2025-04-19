@@ -81,7 +81,7 @@ void drawBFS(Map2D* map,CellCord* start, CellCord* end){
                         if(mPos < 0 || mPos >= map->mapWidth * map->mapHeight)
                                 continue;
                         //Skip if it already visited it or it is blocked by a wall
-                        if(visited[mPos] == true || map->buffer[mPos] == 1)
+                        if(visited[mPos] == true || map->buffer[mPos] > 0)
                                 continue;
                         //Add neighbor to the queue
                         enqueue(&q,&neighbor);
@@ -144,7 +144,7 @@ CellCord getNextPosition(Map2D* map,CellCord* start, CellCord* end){
                         if(mPos < 0 || mPos >= map->mapWidth * map->mapHeight)
                                 continue;
                         //Skip if it already visited it or it is blocked by a wall
-                        if(visited[mPos] == true || map->buffer[mPos] == 1)
+                        if(visited[mPos] == true || map->buffer[mPos] > 0)
                                 continue;
                         //Add neighbor to the queue
                         enqueue(&q,&neighbor);

@@ -95,8 +95,8 @@ void drawEntityOnMap(Entity* entity,float r,float g,float b);
 
 //Raycasting functions for debugging
 void drawRays3D(Map2D* map,Entity* entity);//Draw according to the view of an entity
-VECTOR2D castRayH(Map2D* map, Entity* entity);
-VECTOR2D castRayV(Map2D* map, Entity* entity);
+VECTOR2D castRayH(Map2D* map, Entity* entity, int* mapVal);
+VECTOR2D castRayV(Map2D* map, Entity* entity, int* mapVal);
 
 //For shading
 float fogFactor(float distance);
